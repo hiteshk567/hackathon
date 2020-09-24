@@ -1,17 +1,43 @@
+let h1 = createElement("h1", "result");
+
+h1.innerHTML = "CHESS GAME"
+
+let button = createElement("button", "btn");
+button.type = "button";
+button.innerHTML = "RESTART";
+
+button.addEventListener("click", () => {
+    restartGame();
+});
+
 let selectedPiece = "";
 let oldPosition = [];
 let currentTurn = "white";
+let changedCol = [];
+let oldValues = [];
+let currentHighligh = "";
+let oldSingleHighlight = "";
 
 let image = {
-    pawn: "pawn",
-    knight: "knight",
-    rook: "rook",
-    bishop: "bishop",
-    queen: "queen",
-    king: "king"
+    pawn: "fas fa-chess-pawn fa-3x",
+    knight: "fas fa-chess-knight fa-3x",
+    rook: "fas fa-chess-rook fa-3x",
+    bishop: "fas fa-chess-bishop fa-3x",
+    queen: "fas fa-chess-queen fa-3x",
+    king: "fas fa-chess-king fa-3x"
 };
 
-let container = createElement("div", "container");
+let container;
+
+function restartGame() {
+    let h1 = document.querySelector(".result");
+    h1.innerHTML = "CHESS GAME";
+    selectedPiece = "";
+    oldPosition = [];
+    currentTurn = "white", changedCol = [], oldValues = [], currentHighligh = "", oldSingleHighlight = "";
+    createGrid();
+}
+
 createGrid();
 
 container.addEventListener("click", e => {
@@ -25,14 +51,68 @@ container.addEventListener("click", e => {
         oldPosition = [];
         selectedPiece = "";
         selectedPiece = soldier;
+
         oldPosition.push(row);
         oldPosition.push(col);
+        if (oldSingleHighlight) {
+            let temp = document.querySelector(`[data_row="${oldSingleHighlight[0]}"][data_col="${oldSingleHighlight[1]}"]`);
+            temp.style = "none";
+            currentHighligh = "";
+        }
+
+        currentHighligh = selectHighlight(row, col);
+        oldSingleHighlight = currentHighligh;
+
+        if (oldValues.length > 0) {
+            for (let i = 0; i < oldValues.length; i++) {
+
+                let temp = document.querySelector(`[data_row="${oldValues[i][0]}"][data_col="${oldValues[i][1]}"]`);
+
+                temp.style = "none";
+            }
+            oldValues = [];
+        }
+
+        if (selectedPiece === "pawn") {
+            changedCol = displayPoss(oldPosition[0], oldPosition[1], currentPlayer);
+            oldValues = changedCol;
+        }
         oldPosition.push(currentPlayer, soldier);
     } else {
         if (selectedPiece !== "") {
             if (row >= 0 && row <= 7 && col >= 0 && col <= 7 && isMovable(row, col, selectedPiece, oldPosition[0], oldPosition[1], currentTurn)) {
                 removeOldPos(oldPosition[0], oldPosition[1]);
+                removeOldPos(row, col);
                 updatePos(row, col, oldPosition[2], oldPosition[3], selectedPiece);
+                if (oldSingleHighlight) {
+                    let temp = document.querySelector(`[data_row="${oldSingleHighlight[0]}"][data_col="${oldSingleHighlight[1]}"]`);
+                    temp.style = "none";
+                    currentHighligh = "";
+                }
+                if (changedCol.length > 0) {
+                    for (let i = 0; i < changedCol.length; i++) {
+
+                        let temp = document.querySelector(`[data_row="${changedCol[i][0]}"][data_col="${changedCol[i][1]}"]`);
+                        if (!temp) continue;
+                        temp.style = "none";
+                    }
+                    changedCol = [];
+                }
+                let blackKing = document.querySelector(`[soldier="king"][player="black"]`);
+                let whiteKing = document.querySelector(`[soldier="king"][player="white"]`);
+                let h1 = document.querySelector(".result");
+                if (!blackKing) {
+                    h1.innerHTML = "PLAYER 1 WON";
+                    setTimeout(() => {
+                        restartGame();
+                    }, 5000);
+                }
+                if (!whiteKing) {
+                    h1.innerHTML = "PLAYER 2 WON";
+                    setTimeout(() => {
+                        restartGame();
+                    }, 5000);
+                }
                 oldPosition = [];
                 selectedPiece = "";
                 currentTurn = currentTurn === "white" ? "black" : "white";
@@ -43,11 +123,9 @@ container.addEventListener("click", e => {
 
 function isMovable(newRow, newCol, soldier, startRow, startCol, playerMoved) {
     startRow = parseInt(startRow);
-    // console.log(playerMoved);
     startCol = parseInt(startCol);
     newRow = +newRow;
     newCol = +newCol;
-    // console.log(startRow, startCol, newCol, newRow);
     let opponent = playerMoved === "white" ? "black" : "white";
     let allNodes = document.querySelectorAll(`[soldier="none"],[player="${opponent}"]`);
     if (soldier === "pawn") {
@@ -57,6 +135,8 @@ function isMovable(newRow, newCol, soldier, startRow, startCol, playerMoved) {
         }
 
         if (playerMoved === "white") {
+            let isEmemyLeft = document.querySelector(`[data_row="${startRow+1}"][data_col="${startCol-1}"][player="${opponent}"]`);
+            let isEmemyRight = document.querySelector(`[data_row="${startRow+1}"][data_col="${startCol+1}"][player="${opponent}"]`);
             if (newCol === startCol) {
                 let possiblePaths = [];
                 for (let temp = 1; temp <= possibleMove; temp++) {
@@ -67,14 +147,16 @@ function isMovable(newRow, newCol, soldier, startRow, startCol, playerMoved) {
                 }
                 for (let i = 0; i < possiblePaths.length; i++) {
                     if (newRow === possiblePaths[i] && newCol === startCol && (newCol - startCol < possibleMove)) {
-                        // console.log("kumar");
                         return true;
                     }
                 }
-            } else if ((newCol === startCol + 1 || newCol === startCol - 1) && newRow === startRow + 1 && playerMoved !== opponent) {
+            } else if ((newCol === startCol + 1 || newCol === startCol - 1) && newRow === startRow + 1 && playerMoved !== opponent && (isEmemyLeft || isEmemyRight)) {
                 return true;
             }
+
         } else {
+            let isEmemyLeft = document.querySelector(`[data_row="${startRow-1}"][data_col="${startCol-1}"][player="${opponent}"]`);
+            let isEmemyRight = document.querySelector(`[data_row="${startRow-1}"][data_col="${startCol+1}"][player="${opponent}"]`);
             if (newCol === startCol) {
                 let possiblePaths = [];
                 for (let temp = 1; temp <= possibleMove; temp++) {
@@ -85,11 +167,10 @@ function isMovable(newRow, newCol, soldier, startRow, startCol, playerMoved) {
                 }
                 for (let i = 0; i < possiblePaths.length; i++) {
                     if (newRow === possiblePaths[i] && newCol === startCol && (startCol - newCol < possibleMove)) {
-                        // console.log("kumar");
                         return true;
                     }
                 }
-            } else if ((newCol === startCol + 1 || newCol === startCol - 1) && newRow === startRow - 1 && playerMoved !== opponent) {
+            } else if ((newCol === startCol + 1 || newCol === startCol - 1) && newRow === startRow - 1 && playerMoved !== opponent && (isEmemyLeft || isEmemyRight)) {
                 return true;
             }
         }
@@ -143,51 +224,168 @@ function isMovable(newRow, newCol, soldier, startRow, startCol, playerMoved) {
         }
         return false;
     } else if (soldier === "bishop") {
-
+        if (newRow === startRow || newCol === startCol) return false;
+        let possibleMoves = checkDiagonal(newRow, newCol, startRow, startCol, playerMoved, opponent);
+        for (let i = 0; i < possibleMoves.length; i++) {
+            if (newRow === possibleMoves[i][0] && newCol === possibleMoves[i][1]) return true;
+        }
+        return false;
+    } else if (soldier === "queen") {
+        let possibleMoves = checkDiagonal(newRow, newCol, startRow, startCol, playerMoved, opponent);
+        for (let i = 0; i < possibleMoves.length; i++) {
+            if (newRow === possibleMoves[i][0] && newCol === possibleMoves[i][1]) {
+                return true
+            };
+        }
+        let verticalMoves = checkVertical(newRow, newCol, startRow, startCol, playerMoved, opponent);
+        for (let i = 0; i < verticalMoves.length; i++) {
+            if (newRow === verticalMoves[i][0] && newCol === verticalMoves[i][1]) return true;
+        }
+        return false;
+    } else if (soldier === "king") {
+        let possibleMoves = [
+            [startRow + 1, startCol],
+            [startRow - 1, startCol],
+            [startRow, startCol + 1],
+            [startRow, startCol - 1],
+            [startRow + 1, startCol - 1],
+            [startRow + 1, startCol + 1],
+            [startRow - 1, startCol - 1],
+            [startRow - 1, startCol + 1]
+        ];
+        for (let i = 0; i < possibleMoves.length; i++) {
+            if (newRow === possibleMoves[i][0] && newCol === possibleMoves[i][1]) {
+                let checkEmpty = document.querySelector(`[data_row="${newRow}"][data_col="${newCol}"][player="${playerMoved}"]`);
+                if (checkEmpty) return false;
+                return true;
+            }
+        }
+        return false;
     }
+}
+
+function checkVertical(newRow, newCol, startRow, startCol, playerMoved, opponent) {
+    let possibleMoves = [];
+    if (newRow === startRow) {
+        let start = newCol > startCol ? startCol : newCol;
+        let end = newCol > startCol ? newCol : startCol;
+        for (let i = start; i <= end; i++) {
+            if (i === startCol) continue;
+            let isEmpty = document.querySelector(`[data_row="${startRow}"][data_col="${i}"][player="${playerMoved}"]`);
+            if (isEmpty) break;
+            let isEnemy = document.querySelector(`[data_row="${startRow}"][data_col="${i}"][player="${opponent}"]`);
+            if (isEnemy) {
+                possibleMoves.push([startRow, i]);
+                break;
+            }
+            possibleMoves.push([newRow, i]);
+        }
+    }
+    if (newCol === startCol) {
+        let start = newRow > startRow ? startRow : newRow;
+        let end = newRow > startRow ? newRow : startRow;
+        for (let i = start; i <= end; i++) {
+            if (i === startRow) continue;
+            let isEmpty = document.querySelector(`[data_row="${i}"][data_col="${startCol}"][player="${playerMoved}"]`);
+            if (isEmpty) break;
+            let isEnemy = document.querySelector(`[data_row="${i}"][data_col="${startCol}"][player="${opponent}"]`);
+            if (isEnemy) {
+                possibleMoves.push([i, startCol]);
+                break;
+            }
+            possibleMoves.push([i, newCol]);
+        }
+    }
+    return possibleMoves;
+}
+
+function checkDiagonal(newRow, newCol, startRow, startCol, playerMoved, opponent) {
+    let possibleMoves = [];
+    let start = newRow > startRow ? startRow : newRow;
+    let end = newRow > startRow ? newRow : startRow;
+    let k = 0;
+    for (let i = start; i <= end; i++) {
+        k++;
+        let isEmpty = document.querySelector(`[data_row="${startRow+k}"][data_col="${startCol+k}"][player="${playerMoved}"]`);
+        if (isEmpty) break;
+        let isEnemy = document.querySelector(`[data_row="${startRow+k}"][data_col="${startCol+k}"][player="${opponent}"]`);
+        if (isEnemy) {
+            possibleMoves.push([startRow + k, startCol + k]);
+            break;
+        }
+        possibleMoves.push([startRow + k, startCol + k]);
+    }
+    k = 0;
+    for (let i = start; i <= end; i++) {
+        k++;
+        let isEmpty = document.querySelector(`[data_row="${startRow+k}"][data_col="${startCol-k}"][player="${playerMoved}"]`);
+        if (isEmpty) break;
+        let isEnemy = document.querySelector(`[data_row="${startRow+k}"][data_col="${startCol-k}"][player="${opponent}"]`);
+        if (isEnemy) {
+            possibleMoves.push([startRow + k, startCol - k]);
+            break;
+        }
+        possibleMoves.push([startRow + k, startCol - k]);
+    }
+    k = 0;
+    for (let i = start; i <= end; i++) {
+        k++;
+        let isEmpty = document.querySelector(`[data_row="${startRow-k}"][data_col="${startCol+k}"][player="${playerMoved}"]`);
+        if (isEmpty) break;
+        let isEnemy = document.querySelector(`[data_row="${startRow-k}"][data_col="${startCol+k}"][player="${opponent}"]`);
+        if (isEnemy) {
+            possibleMoves.push([startRow - k, startCol + k]);
+            break;
+        }
+        possibleMoves.push([startRow - k, startCol + k]);
+    }
+    k = 0;
+    for (let i = start; i <= end; i++) {
+        k++;
+        let isEmpty = document.querySelector(`[data_row="${startRow-k}"][data_col="${startCol-k}"][player="${playerMoved}"]`);
+        if (isEmpty) break;
+        let isEnemy = document.querySelector(`[data_row="${startRow-k}"][data_col="${startCol-k}"][player="${opponent}"]`);
+        if (isEnemy) {
+            possibleMoves.push([startRow - k, startCol - k]);
+            break;
+        }
+        possibleMoves.push([startRow - k, startCol - k]);
+    }
+    return possibleMoves;
 }
 
 function checkOpponentAcquired(row, col, opponent, basePlayer) {
     let canMove = true;
     let pos = document.querySelector(`[data_row="${row}"][data_col="${col}"][player="none"]`);
-    // console.log(pos);
-    // console.log("hitesh");
     if (pos)
         return false;
     else
         return true;
-    // let canCut1, canCut2;
-    // if (col + 1 <= 7 || col - 1 >= 0) {
-    //     canCut1 = document.querySelectorAll(`[data_row="${row}"][data_col="${col+1}"][player="${opponent}"]`);
-    //     canCut2 = document.querySelectorAll(`[data_row="${row}"][data_col="${col-1}"][player="${opponent}"]`);
-    //     console.log(canCut2, canCut1);
-    //     if (canCut1 || canCut2) {
-    //         return false;
-    //     } else
-    //         return true;
-    // }
-
-
 }
 
 function removeOldPos(row, col) {
     let oldNode = document.querySelector(`[data_row="${row}"][data_col="${col}"]`);
-    oldNode.innerText = "";
+    let img;
+    if (oldNode.childNodes.length !== 0) {
+        img = oldNode.childNodes[0];
+        oldNode.removeChild(img);
+    }
     oldNode.setAttribute("player", "none");
     oldNode.setAttribute("soldier", "none");
-    // console.log(oldNode);
 }
 
 function updatePos(row, col, currentPlayer, soldier, selectedPiece) {
     let selectedNode = document.querySelector(`[data_row="${row}"][data_col="${col}"]`);
-    selectedNode.innerHTML = selectedPiece;
-    // console.log(currentPlayer, soldier);
+    let img = createElement("img");
+    img.src = "images/" + soldier + "_" + currentPlayer + ".png";
+    selectedNode.append(img);
     selectedNode.setAttribute("player", currentPlayer);
     selectedNode.setAttribute("soldier", soldier);
-    // console.log(selectedNode);
 }
 
 function createGrid() {
+    document.body.innerHTML = "";
+    container = createElement("div", "container");
     for (let i = 0; i < 8; i++) {
         let singleRow = createElement("div", "row");
         let className = "";
@@ -219,12 +417,16 @@ function createGrid() {
             }
 
             let singleNode = node(i, j, className, player, soldier);
-            if (soldier !== "none")
-                singleNode.innerHTML = image[soldier];
+            if (soldier !== "none") {
+                let img = createElement("img");
+                img.src = "images/" + soldier + "_" + player + ".png";
+                singleNode.append(img);
+            }
             singleRow.append(singleNode);
         }
         container.append(singleRow);
     }
+    document.body.append(button, h1, container);
 }
 
 function getPlayer(n) {
@@ -233,6 +435,61 @@ function getPlayer(n) {
     else return "none";
 }
 
+function displayPoss(startRow, startCol, player) {
+    startCol = +startCol, startRow = +startRow;
+    let possibleMove = 1;
+    let changedCol = [];
+    if (startRow === 1 || startRow === 6) {
+        possibleMove += 1;
+    }
+    if (player === "white") {
+        let left = document.querySelector(`[data_row="${startRow+1}"][data_col="${startCol+1}"][player="${player}"]`);
+        let right = document.querySelector(`[data_row="${startRow+1}"][data_col="${startCol-1}"][player="${player}"]`);
+        if (!left) changedCol.push([startRow + 1, startCol + 1]);
+        if (!right) changedCol.push([startRow + 1, startCol - 1]);
+        if (possibleMove === 2) {
+            changedCol = [
+                [startRow + 1, startCol],
+                [startRow + 2, startCol]
+            ];
+        } else {
+            changedCol = [
+                [startRow + 1, startCol]
+            ];
+        }
+    } else {
+        let left = document.querySelector(`[data_row="${startRow-1}"][data_col="${startCol+1}"][player="${player}"]`);
+        let right = document.querySelector(`[data_row="${startRow-1}"][data_col="${startCol-1}"][player="${player}"]`);
+        if (!left) changedCol.push([startRow - 1, startCol + 1]);
+        if (!right) changedCol.push([startRow - 1, startCol - 1]);
+        if (possibleMove === 2) {
+            changedCol = [
+                [startRow - 1, startCol],
+                [startRow - 2, startCol]
+            ];
+        } else {
+            changedCol = [
+                [startRow - 1, startCol]
+            ];
+        }
+    }
+
+
+    for (let i = 0; i < changedCol.length; i++) {
+        let temp = document.querySelector(`[data_row="${changedCol[i][0]}"][data_col="${changedCol[i][1]}"][player="none"]`);
+        if (!temp) break;
+        oldValues.push(temp.getAttribute("class"));
+        temp.style.backgroundColor = "yellow";
+    }
+    return changedCol;
+}
+
+function selectHighlight(row, col) {
+    let temp = document.querySelector(`[data_row="${row}"][data_col="${col}"]`);
+    oldSingleHighlight = [row, col];
+    temp.style.backgroundColor = "green";
+    return oldSingleHighlight;
+}
 
 function node(row, col, className, playerName, soldier) {
     let singleDiv = createElement("div", className);
@@ -241,8 +498,6 @@ function node(row, col, className, playerName, soldier) {
     singleDiv.setAttribute("visited", false);
     singleDiv.setAttribute("player", playerName);
     singleDiv.setAttribute("soldier", soldier)
-
-
     return singleDiv;
 }
 
@@ -251,5 +506,3 @@ function createElement(tagName, className) {
     element.className = className;
     return element;
 }
-
-document.body.append(container);

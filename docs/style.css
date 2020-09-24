@@ -1,6 +1,18 @@
+body {
+    background: #39393a;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+h1 {
+    color: white;
+    line-height: 2rem;
+}
+
 .container {
-    width: 100%;
+    width: 90%;
     border: 1px solid black;
+    margin: auto;
+    background: white;
 }
 
 .row {
@@ -10,14 +22,34 @@
 }
 
 .col {
-    width: 12.2%;
+    width: 12.5%;
     height: 70px;
     border: 1px solid black;
 }
 
 .col-grey {
-    width: 12.2%;
+    width: 12.5%;
     height: 70px;
     background: #a2a5a8;
     border: 1px solid black;
+}
+
+.result {
+    text-align: center;
+}
+
+.btn {
+    font-weight: bold;
+    height: 35px;
+    width: 80px;
+    border: 1px solid #16497c;
+    background: #5895d1;
+    position: absolute;
+    top: 30px;
+    left: 75px;
+}
+
+.btn:hover {
+    color: white;
+    background-color: #0e151b;
 }
