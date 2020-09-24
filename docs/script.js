@@ -1,3 +1,7 @@
+let selectedPiece = "";
+let oldPosition = [];
+let currentTurn = "white";
+
 let image = {
     pawn: "pawn",
     knight: "knight",
@@ -17,23 +21,170 @@ container.addEventListener("click", e => {
     let isVisited = e.target.getAttribute("visited");
     let currentPlayer = e.target.getAttribute("player");
     let soldier = e.target.getAttribute("soldier");
-
-
-    // if (soldier !== "none") {
-    //     selectedPiece = soldier;
-    // } else {
-
-    //     if (selectedPiece !== "")
-    //         updatePos(row, col, currentPlayer, soldier, selectedPiece);
-    // }
-
-    console.log(row, col, color, isVisited, currentPlayer, soldier);
+    if (soldier !== "none" && currentPlayer === currentTurn) {
+        oldPosition = [];
+        selectedPiece = "";
+        selectedPiece = soldier;
+        oldPosition.push(row);
+        oldPosition.push(col);
+        oldPosition.push(currentPlayer, soldier);
+    } else {
+        if (selectedPiece !== "") {
+            if (row >= 0 && row <= 7 && col >= 0 && col <= 7 && isMovable(row, col, selectedPiece, oldPosition[0], oldPosition[1], currentTurn)) {
+                removeOldPos(oldPosition[0], oldPosition[1]);
+                updatePos(row, col, oldPosition[2], oldPosition[3], selectedPiece);
+                oldPosition = [];
+                selectedPiece = "";
+                currentTurn = currentTurn === "white" ? "black" : "white";
+            }
+        }
+    }
 });
 
+function isMovable(newRow, newCol, soldier, startRow, startCol, playerMoved) {
+    startRow = parseInt(startRow);
+    // console.log(playerMoved);
+    startCol = parseInt(startCol);
+    newRow = +newRow;
+    newCol = +newCol;
+    // console.log(startRow, startCol, newCol, newRow);
+    let opponent = playerMoved === "white" ? "black" : "white";
+    let allNodes = document.querySelectorAll(`[soldier="none"],[player="${opponent}"]`);
+    if (soldier === "pawn") {
+        let possibleMove = 1;
+        if (startRow === 1 || startRow === 6) {
+            possibleMove += 1;
+        }
+
+        if (playerMoved === "white") {
+            if (newCol === startCol) {
+                let possiblePaths = [];
+                for (let temp = 1; temp <= possibleMove; temp++) {
+                    let pushRow = checkOpponentAcquired(startRow + temp, startCol, opponent, playerMoved);
+                    if (pushRow)
+                        break;
+                    possiblePaths.push(startRow + temp);
+                }
+                for (let i = 0; i < possiblePaths.length; i++) {
+                    if (newRow === possiblePaths[i] && newCol === startCol && (newCol - startCol < possibleMove)) {
+                        // console.log("kumar");
+                        return true;
+                    }
+                }
+            } else if ((newCol === startCol + 1 || newCol === startCol - 1) && newRow === startRow + 1 && playerMoved !== opponent) {
+                return true;
+            }
+        } else {
+            if (newCol === startCol) {
+                let possiblePaths = [];
+                for (let temp = 1; temp <= possibleMove; temp++) {
+                    let pushRow = checkOpponentAcquired(startRow - temp, startCol, opponent, playerMoved);
+                    if (pushRow)
+                        break;
+                    possiblePaths.push(startRow - temp);
+                }
+                for (let i = 0; i < possiblePaths.length; i++) {
+                    if (newRow === possiblePaths[i] && newCol === startCol && (startCol - newCol < possibleMove)) {
+                        // console.log("kumar");
+                        return true;
+                    }
+                }
+            } else if ((newCol === startCol + 1 || newCol === startCol - 1) && newRow === startRow - 1 && playerMoved !== opponent) {
+                return true;
+            }
+        }
+    } else if (soldier === "rook") {
+        if (newCol === startCol) {
+            let start = newRow > startRow ? startRow : newRow;
+            let end = newRow > startRow ? newRow : startRow;
+            for (let i = start + 1; i <= end; i++) {
+                if (i === startRow) continue;
+                let isOpponent = document.querySelector(`[data_row="${i}"][data_col="${newCol}"][player="${opponent}"]`);
+                if (isOpponent && i === end) return true;
+                let temp = document.querySelector(`[data_row="${i}"][data_col="${newCol}"][player="none"]`);
+                if (!temp) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        if (newRow === startRow) {
+            let start = newCol > startCol ? startCol : newCol;
+            let end = newCol > startCol ? newCol : startCol;
+            for (let i = start + 1; i <= end; i++) {
+                if (i === startCol) continue;
+                let isOpponent = document.querySelector(`[data_row="${newRow}"][data_col="${i}"][player="${opponent}"]`);
+                if (isOpponent && i === end) return true;
+                let temp = document.querySelector(`[data_row="${newRow}"][data_col="${i}"][player="none"]`);
+                if (!temp) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    } else if (soldier === "knight") {
+        if (newRow === startRow || newCol === startCol) return false;
+        let possibleMoves = [
+            [startRow + 1, startCol - 2],
+            [startRow + 1, startCol + 2],
+            [startRow - 1, startCol - 2],
+            [startRow - 1, startCol + 2],
+            [startRow + 2, startCol - 1],
+            [startRow + 2, startCol + 1],
+            [startRow - 2, startCol - 1],
+            [startRow - 2, startCol + 1]
+        ];
+        for (let i = 0; i < possibleMoves.length; i++) {
+            if (newRow === possibleMoves[i][0] && newCol === possibleMoves[i][1]) {
+                let checkEmpty = document.querySelector(`[data_row="${newRow}"][data_col="${newCol}"][player="${playerMoved}"]`);
+                if (checkEmpty) return false;
+                return true;
+            }
+        }
+        return false;
+    } else if (soldier === "bishop") {
+
+    }
+}
+
+function checkOpponentAcquired(row, col, opponent, basePlayer) {
+    let canMove = true;
+    let pos = document.querySelector(`[data_row="${row}"][data_col="${col}"][player="none"]`);
+    // console.log(pos);
+    // console.log("hitesh");
+    if (pos)
+        return false;
+    else
+        return true;
+    // let canCut1, canCut2;
+    // if (col + 1 <= 7 || col - 1 >= 0) {
+    //     canCut1 = document.querySelectorAll(`[data_row="${row}"][data_col="${col+1}"][player="${opponent}"]`);
+    //     canCut2 = document.querySelectorAll(`[data_row="${row}"][data_col="${col-1}"][player="${opponent}"]`);
+    //     console.log(canCut2, canCut1);
+    //     if (canCut1 || canCut2) {
+    //         return false;
+    //     } else
+    //         return true;
+    // }
+
+
+}
+
+function removeOldPos(row, col) {
+    let oldNode = document.querySelector(`[data_row="${row}"][data_col="${col}"]`);
+    oldNode.innerText = "";
+    oldNode.setAttribute("player", "none");
+    oldNode.setAttribute("soldier", "none");
+    // console.log(oldNode);
+}
+
 function updatePos(row, col, currentPlayer, soldier, selectedPiece) {
-    // let newPos = document.querySelector(`[data_row="1"`);
-    console.log("a");
-    // console.log(newPost);
+    let selectedNode = document.querySelector(`[data_row="${row}"][data_col="${col}"]`);
+    selectedNode.innerHTML = selectedPiece;
+    // console.log(currentPlayer, soldier);
+    selectedNode.setAttribute("player", currentPlayer);
+    selectedNode.setAttribute("soldier", soldier);
+    // console.log(selectedNode);
 }
 
 function createGrid() {

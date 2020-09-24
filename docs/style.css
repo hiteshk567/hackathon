@@ -6,17 +6,16 @@
 .row {
     width: 100%;
     text-align: center;
+    display: flex;
 }
 
 .col {
-    display: inline-block;
     width: 12.2%;
     height: 70px;
     border: 1px solid black;
 }
 
 .col-grey {
-    display: inline-block;
     width: 12.2%;
     height: 70px;
     background: #a2a5a8;
