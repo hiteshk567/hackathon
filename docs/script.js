@@ -2,15 +2,19 @@ let h1 = createElement("h1", "result");
 
 h1.innerHTML = "CHESS GAME";
 
+let whoseTurn = createElement("h1", "turn");
+whoseTurn.innerHTML = "white";
+
 let button = createElement("button", "btn");
 button.type = "button";
 button.innerHTML = "RESTART";
 
 function resetAll() {
   restartGame();
+  let turn = document.querySelector(".turn");
+  turn.innerHTML = "white";
   container.addEventListener("click", (e) => {
-    //   e.stopPropagation();
-    console.log(e.target);
+    // console.log(e.target);
     let row = e.target.getAttribute("data_row");
     let col = e.target.getAttribute("data_col");
     let color = e.target.className;
@@ -155,7 +159,9 @@ createGrid();
 
 container.addEventListener("click", (e) => {
   //   e.stopPropagation();
-  console.log(e.target);
+  //   console.log(e.target);
+  let whoseTurn = document.querySelector(".turn");
+
   let row = e.target.getAttribute("data_row");
   let col = e.target.getAttribute("data_col");
   let color = e.target.className;
@@ -254,6 +260,7 @@ container.addEventListener("click", (e) => {
         oldPosition = [];
         selectedPiece = "";
         currentTurn = currentTurn === "white" ? "black" : "white";
+        whoseTurn.innerHTML = currentTurn;
       }
     }
   }
@@ -724,6 +731,8 @@ function getPlayer(n) {
 }
 
 function displayPoss(startRow, startCol, player) {
+  //   enemy = enemy === "white" ? "black" : "white";
+  let enemy = player === "white" ? "black" : "white";
   (startCol = +startCol), (startRow = +startRow);
   let possibleMove = 1;
   let changedCol = [];
@@ -734,43 +743,38 @@ function displayPoss(startRow, startCol, player) {
     let left = document.querySelector(
       `[data_row="${startRow + 1}"][data_col="${
         startCol + 1
-      }"][player="${player}"]`
+      }"][player="${enemy}"]`
     );
     let right = document.querySelector(
       `[data_row="${startRow + 1}"][data_col="${
         startCol - 1
-      }"][player="${player}"]`
+      }"][player="${enemy}"]`
     );
-    if (!left) changedCol.push([startRow + 1, startCol + 1]);
-    if (!right) changedCol.push([startRow + 1, startCol - 1]);
+    console.log(left, right, startRow + 1, startCol + 1, enemy);
+    if (left) changedCol.push([startRow + 1, startCol + 1]);
+    if (right) changedCol.push([startRow + 1, startCol - 1]);
     if (possibleMove === 2) {
-      changedCol = [
-        [startRow + 1, startCol],
-        [startRow + 2, startCol],
-      ];
+      changedCol.push([startRow + 1, startCol], [startRow + 2, startCol]);
     } else {
-      changedCol = [[startRow + 1, startCol]];
+      changedCol.push([startRow + 1, startCol]);
     }
   } else {
     let left = document.querySelector(
       `[data_row="${startRow - 1}"][data_col="${
         startCol + 1
-      }"][player="${player}"]`
+      }"][player="${enemy}"]`
     );
     let right = document.querySelector(
       `[data_row="${startRow - 1}"][data_col="${
         startCol - 1
-      }"][player="${player}"]`
+      }"][player="${enemy}"]`
     );
-    if (!left) changedCol.push([startRow - 1, startCol + 1]);
-    if (!right) changedCol.push([startRow - 1, startCol - 1]);
+    if (left) changedCol.push([startRow - 1, startCol + 1]);
+    if (right) changedCol.push([startRow - 1, startCol - 1]);
     if (possibleMove === 2) {
-      changedCol = [
-        [startRow - 1, startCol],
-        [startRow - 2, startCol],
-      ];
+      changedCol.push([startRow - 1, startCol], [startRow - 2, startCol]);
     } else {
-      changedCol = [[startRow - 1, startCol]];
+      changedCol.push([startRow - 1, startCol]);
     }
   }
 
@@ -778,6 +782,13 @@ function displayPoss(startRow, startCol, player) {
     let temp = document.querySelector(
       `[data_row="${changedCol[i][0]}"][data_col="${changedCol[i][1]}"][player="none"]`
     );
+    if (!temp) {
+      if (startCol !== changedCol[i][1]) {
+        temp = document.querySelector(
+          `[data_row="${changedCol[i][0]}"][data_col="${changedCol[i][1]}"][player="${enemy}"]`
+        );
+      }
+    }
     if (!temp) break;
     oldValues.push(temp.getAttribute("class"));
     temp.style.backgroundColor = "yellow";
