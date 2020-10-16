@@ -1,3 +1,11 @@
+let selectedPiece = "";
+let oldPosition = [];
+let currentTurn = "white";
+let changedCol = [];
+let oldValues = [];
+let currentHighligh = "";
+let oldSingleHighlight = "";
+
 let h1 = createElement("h1", "result");
 
 h1.innerHTML = "CHESS GAME";
@@ -12,7 +20,7 @@ button.innerHTML = "RESTART";
 function resetAll() {
   restartGame();
   let turn = document.querySelector(".turn");
-  turn.innerHTML = "white";
+  currentTurn.innerHTML = "white";
   container.addEventListener("click", (e) => {
     // console.log(e.target);
     let row = e.target.getAttribute("data_row");
@@ -123,13 +131,7 @@ button.addEventListener("click", () => {
   resetAll();
 });
 
-let selectedPiece = "";
-let oldPosition = [];
-let currentTurn = "white";
-let changedCol = [];
-let oldValues = [];
-let currentHighligh = "";
-let oldSingleHighlight = "";
+
 
 let image = {
   pawn: "fas fa-chess-pawn fa-3x",
